@@ -15,7 +15,52 @@
 }
 
 body {
-  color: var(--foreground);
+  color: black;
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Add these styles for code blocks */
+.code-block {
+  @apply rounded-lg overflow-hidden bg-gray-800 my-2;
+}
+
+.code-header {
+  @apply bg-gray-700 px-4 py-2 flex items-center;
+}
+
+.language-tag {
+  @apply text-xs text-gray-300 font-mono;
+}
+
+.code-block pre {
+  @apply p-4 m-0 overflow-x-auto;
+}
+
+.code-block code {
+  @apply font-mono text-sm text-gray-100;
+}
+
+/* Inline code styling */
+code {
+  @apply bg-gray-100 rounded px-1 py-0.5 text-sm font-mono;
+}
+
+/* Headers */
+h1, h2, h3 {
+  @apply font-bold mb-2;
+}
+
+h1 { @apply text-2xl; }
+h2 { @apply text-xl; }
+h3 { @apply text-lg; }
+
+/* Lists */
+ul {
+  @apply list-disc pl-5 my-2;
+}
+
+/* Paragraphs */
+p {
+  @apply my-2;
 }
