@@ -185,66 +185,68 @@ export default function VoiceChat() {
         visibility: isScreenSharing ? 'hidden' : 'visible'
       }}
     >
-      <div className="flex flex-col h-full bg-white rounded-lg shadow-lg">
-        {isScreenSharing && (
-          <div className="bg-yellow-100 text-yellow-800 px-2 py-1 text-xs rounded-t-lg">
-            Screen sharing active - Only visible to you
-          </div>
-        )}
-
-        <div className="flex-1 overflow-y-auto message-container">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`message ${
-                message.type === 'user' 
-                  ? 'bg-blue-100 ml-auto max-w-[85%] text-blue-900' 
-                  : message.type === 'error'
-                  ? 'bg-red-100 mr-auto max-w-[85%] text-red-900'
-                  : 'bg-gray-100 mr-auto max-w-[85%] text-gray-900'
-              }`}
-            >
-              <div 
-                dangerouslySetInnerHTML={{ __html: message.text }}
-                className="message-content"
-              />
+      <div className="chat-content">
+        <div className="flex flex-col h-full bg-white rounded-lg shadow-lg">
+          {isScreenSharing && (
+            <div className="bg-yellow-100 text-yellow-800 px-2 py-1 text-xs rounded-t-lg">
+              Screen sharing active - Only visible to you
             </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-        
-        <div className="border-t p-2">
-          <div className="bg-gray-100 p-2 rounded-lg min-h-[45px] text-sm text-gray-700">
-            {transcript || 'Start speaking...'}
+          )}
+
+          <div className="flex-1 overflow-y-auto message-container">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={`message ${
+                  message.type === 'user' 
+                    ? 'bg-blue-100 ml-auto text-blue-900' 
+                    : message.type === 'error'
+                    ? 'bg-red-100 mr-auto text-red-900'
+                    : 'bg-gray-100 mr-auto text-gray-900'
+                }`}
+              >
+                <div 
+                  dangerouslySetInnerHTML={{ __html: message.text }}
+                  className="message-content"
+                />
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
           </div>
           
-          <div className="flex justify-center mt-2 pb-2">
-            <button
-              onClick={isListening ? stopListening : startListening}
-              disabled={isLoading}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium flex items-center ${
-                isListening 
-                  ? 'bg-red-500 hover:bg-red-600 text-white' 
-                  : 'bg-blue-500 hover:bg-blue-600 text-white'
-              } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="animate-spin w-4 h-4 mr-1" />
-                  Processing...
-                </>
-              ) : isListening ? (
-                <>
-                  <MicOff className="w-4 h-4 mr-1" />
-                  Stop Recording
-                </>
-              ) : (
-                <>
-                  <Mic className="w-4 h-4 mr-1" />
-                  Start Recording
-                </>
-              )}
-            </button>
+          <div className="border-t p-2">
+            <div className="bg-gray-100 p-2 rounded-lg min-h-[40px] text-sm text-gray-700">
+              {transcript || 'Start speaking...'}
+            </div>
+            
+            <div className="flex justify-center mt-2 pb-1">
+              <button
+                onClick={isListening ? stopListening : startListening}
+                disabled={isLoading}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium flex items-center ${
+                  isListening 
+                    ? 'bg-red-500 hover:bg-red-600 text-white' 
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin w-4 h-4 mr-1" />
+                    Processing...
+                  </>
+                ) : isListening ? (
+                  <>
+                    <MicOff className="w-4 h-4 mr-1" />
+                    Stop Recording
+                  </>
+                ) : (
+                  <>
+                    <Mic className="w-4 h-4 mr-1" />
+                    Start Recording
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

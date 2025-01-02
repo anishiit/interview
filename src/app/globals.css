@@ -23,7 +23,7 @@ body {
 /* Add these styles for code blocks */
 .code-block {
   @apply rounded-lg overflow-hidden bg-gray-800 my-1;
-  max-height: 250px;
+  max-height: 200px;
 }
 
 .code-header {
@@ -36,13 +36,13 @@ body {
 
 .code-block pre {
   @apply p-2 m-0 overflow-x-auto;
-  font-size: 0.75rem;
-  line-height: 1.3;
+  font-size: 0.7rem;
+  line-height: 1.2;
 }
 
 .code-block code {
   @apply font-mono text-gray-100;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
 }
 
 /* Inline code styling */
@@ -72,27 +72,38 @@ p {
 
 /* Responsive chat container */
 .chat-container {
-  height: calc(100vh - 2rem);
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
+  height: 100vh;
+  width: 100vw;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+/* Chat content wrapper */
+.chat-content {
+  width: 100%;
+  max-width: 1200px; /* Increased max-width for larger screens */
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Message styles */
 .message-container {
-  @apply space-y-2;
+  @apply space-y-1;
   padding: 0.5rem;
 }
 
 .message {
-  @apply p-2 rounded-lg text-sm;
-  margin-bottom: 0.5rem;
+  @apply p-2 rounded-lg;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+  max-width: 85%;
 }
 
 .message-content {
@@ -100,32 +111,68 @@ p {
   font-size: 0.875rem;
 }
 
-/* Responsive adjustments */
-@media (max-width: 640px) {
-  .chat-container {
-    padding: 0.5rem;
-  }
+.message-content p {
+  margin: 0.25rem 0;
+}
 
-  .code-block {
-    max-height: 200px;
-    font-size: 0.7rem;
-  }
+.message-content ul,
+.message-content ol {
+  margin: 0.5rem 0;
+  padding-left: 1rem;
+}
 
+.message-content li {
+  margin: 0.125rem 0;
+}
+
+/* Screen size specific adjustments */
+@media (min-width: 1024px) {
   .message {
-    @apply p-2;
-    margin-bottom: 0.25rem;
+    max-width: 70%; /* Narrower messages on large screens */
+    font-size: 0.8rem;
   }
 
   .message-content {
     font-size: 0.8rem;
   }
+
+  .code-block {
+    max-height: 250px;
+  }
+
+  .code-block pre {
+    font-size: 0.65rem;
+  }
 }
 
-/* Desktop view */
-@media (min-width: 641px) {
-  .chat-container {
-    max-width: 48rem;
-    margin: 0 auto;
-    padding: 1rem;
+@media (min-width: 1536px) {
+  .chat-content {
+    max-width: 1400px; /* Even wider for very large screens */
   }
+
+  .message {
+    max-width: 60%; /* Even narrower messages on extra large screens */
+  }
+}
+
+/* Compact spacing for all screen sizes */
+.prose {
+  max-width: none;
+}
+
+.prose p {
+  margin: 0.5rem 0;
+}
+
+.prose pre {
+  margin: 0.5rem 0;
+}
+
+.prose ul,
+.prose ol {
+  margin: 0.5rem 0;
+}
+
+.prose li {
+  margin: 0.125rem 0;
 }
