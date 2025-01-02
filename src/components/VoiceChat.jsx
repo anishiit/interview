@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { Mic, MicOff, Loader2 } from 'lucide-react'
+import CopyButton from './CopyButton'
 
 export default function VoiceChat() {
   const [isListening, setIsListening] = useState(false)
@@ -203,8 +204,6 @@ export default function VoiceChat() {
       ref={appRef}
       className="chat-container"
       style={{ 
-        WebkitUserSelect: 'none',
-        userSelect: 'none',
         visibility: isScreenSharing ? 'hidden' : 'visible'
       }}
     >
@@ -220,7 +219,7 @@ export default function VoiceChat() {
             {messages.map((message, index) => (
               <div
                 key={index}
-                className={`message ${
+                className={`message group ${
                   message.type === 'user' 
                     ? 'bg-blue-100 ml-auto text-blue-900' 
                     : message.type === 'error'
@@ -228,6 +227,13 @@ export default function VoiceChat() {
                     : 'bg-gray-100 mr-auto text-gray-900'
                 }`}
               >
+                <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <CopyButton text={
+                    message.type === 'ai' 
+                      ? message.text.replace(/```[\s\S]*?```/g, '') // Remove code blocks
+                      : message.text
+                  } />
+                </div>
                 <div 
                   dangerouslySetInnerHTML={{ 
                     __html: message.type === 'ai' 

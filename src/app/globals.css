@@ -29,7 +29,7 @@ body {
 }
 
 .code-header {
-  @apply bg-gray-700 px-2 py-1 flex items-center text-xs sticky top-0 z-10;
+  @apply bg-gray-700 px-2 py-1 flex items-center justify-between text-xs sticky top-0 z-10;
 }
 
 .language-tag {
@@ -93,6 +93,11 @@ p {
   padding: 1rem;
   display: flex;
   justify-content: center;
+  @apply transition-opacity duration-200;
+  -webkit-user-select: text !important; /* Safari */
+  -moz-user-select: text !important; /* Firefox */
+  -ms-user-select: text !important; /* IE10+/Edge */
+  user-select: text !important; /* Standard */
 }
 
 /* Chat content wrapper */
@@ -122,6 +127,11 @@ p {
   max-width: 85%;
   height: auto;
   overflow: visible;
+  @apply relative;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
 }
 
 .message-content {
@@ -234,4 +244,43 @@ p {
 
 .code-block pre::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* Add these styles for copy functionality */
+.copy-button {
+  @apply opacity-0 transition-opacity duration-200;
+}
+
+.message:hover .copy-button {
+  @apply opacity-100;
+}
+
+.message-content {
+  @apply relative;
+}
+
+.message-copy-button {
+  @apply absolute right-0 top-0 opacity-0 transition-opacity duration-200;
+}
+
+.message:hover .message-copy-button {
+  @apply opacity-100;
+}
+
+/* Allow text selection in code blocks */
+.code-block pre,
+.code-block code {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+
+/* Only make the copy button unselectable */
+.copy-button,
+.message-copy-button {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
 }
