@@ -175,6 +175,29 @@ export default function VoiceChat() {
     }
   }
 
+  // Function to format code blocks
+  const formatCodeBlock = (text) => {
+    return text.replace(
+      /```(\w*)([\s\S]*?)```/g,
+      (match, language, code) => {
+        // Remove any HTML entities
+        code = code.replace(/&/g, '&amp;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;')
+                  .trim();
+        
+        return `
+          <div class="code-block">
+            <div class="code-header">
+              <span class="language-tag">${language || 'code'}</span>
+            </div>
+            <pre><code class="${language}">${code}</code></pre>
+          </div>
+        `;
+      }
+    );
+  };
+
   return (
     <div 
       ref={appRef}
@@ -206,7 +229,11 @@ export default function VoiceChat() {
                 }`}
               >
                 <div 
-                  dangerouslySetInnerHTML={{ __html: message.text }}
+                  dangerouslySetInnerHTML={{ 
+                    __html: message.type === 'ai' 
+                      ? formatCodeBlock(message.text)
+                      : message.text
+                  }}
                   className="message-content"
                 />
               </div>
@@ -214,7 +241,7 @@ export default function VoiceChat() {
             <div ref={messagesEndRef} />
           </div>
           
-          <div className="border-t p-2">
+          <div className="border-t p-2 bg-white">
             <div className="bg-gray-100 p-2 rounded-lg min-h-[40px] text-sm text-gray-700">
               {transcript || 'Start speaking...'}
             </div>

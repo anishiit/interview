@@ -22,8 +22,10 @@ body {
 
 /* Add these styles for code blocks */
 .code-block {
-  @apply rounded-lg overflow-hidden bg-gray-800 my-1;
-  max-height: 200px;
+  @apply rounded-lg bg-gray-800 my-1;
+  overflow: visible;
+  width: 100%;
+  height: auto;
 }
 
 .code-header {
@@ -35,7 +37,13 @@ body {
 }
 
 .code-block pre {
-  @apply p-2 m-0 overflow-x-auto;
+  @apply p-2 m-0;
+  overflow-x: auto;
+  overflow-y: visible;
+  max-height: none !important;
+  height: auto !important;
+  white-space: pre;
+  word-wrap: normal;
   font-size: 0.7rem;
   line-height: 1.2;
 }
@@ -43,6 +51,9 @@ body {
 .code-block code {
   @apply font-mono text-gray-100;
   font-size: 0.7rem;
+  white-space: pre;
+  display: block;
+  width: 100%;
 }
 
 /* Inline code styling */
@@ -91,12 +102,17 @@ p {
   height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* Message styles */
 .message-container {
   @apply space-y-1;
   padding: 0.5rem;
+  height: auto;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
 }
 
 .message {
@@ -104,11 +120,19 @@ p {
   font-size: 0.875rem;
   margin-bottom: 0.25rem;
   max-width: 85%;
+  height: auto;
+  overflow: visible;
 }
 
 .message-content {
   @apply prose prose-sm max-w-none;
   font-size: 0.875rem;
+  overflow: visible;
+  height: auto;
+}
+
+.message-content > * {
+  margin: 0.25rem 0;
 }
 
 .message-content p {
@@ -125,22 +149,43 @@ p {
   margin: 0.125rem 0;
 }
 
+/* Ensure code blocks show completely */
+.message-content pre {
+  margin: 0.5rem 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  height: auto;
+  max-height: none;
+}
+
+.message-content code {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Adjust scroll behavior */
+.chat-content {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-1.overflow-y-auto {
+  min-height: 0;
+  height: auto;
+}
+
 /* Screen size specific adjustments */
 @media (min-width: 1024px) {
   .message {
-    max-width: 70%; /* Narrower messages on large screens */
+    max-width: 90%; /* Wider messages to accommodate code */
     font-size: 0.8rem;
   }
 
-  .message-content {
-    font-size: 0.8rem;
-  }
-
-  .code-block {
-    max-height: 250px;
-  }
-
-  .code-block pre {
+  .code-block pre,
+  .code-block code {
     font-size: 0.65rem;
   }
 }
@@ -175,4 +220,18 @@ p {
 
 .prose li {
   margin: 0.125rem 0;
+}
+
+/* Hide scrollbar but keep functionality */
+.code-block pre::-webkit-scrollbar {
+  height: 4px;
+}
+
+.code-block pre::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.code-block pre::-webkit-scrollbar-track {
+  background: transparent;
 }
