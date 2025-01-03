@@ -284,3 +284,28 @@ p {
   -ms-user-select: none !important;
   user-select: none !important;
 }
+
+/* Add these styles for the history modal */
+.history-modal {
+  @apply fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4;
+}
+
+.history-content {
+  @apply bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto;
+}
+
+.history-header {
+  @apply flex justify-between items-center p-4 border-b;
+}
+
+.history-list {
+  @apply p-4 space-y-4;
+}
+
+.history-item {
+  @apply border rounded-lg p-4;
+}
+
+.history-timestamp {
+  @apply text-sm text-gray-500 mb-2;
+}

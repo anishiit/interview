@@ -15,91 +15,95 @@ export default function VoiceChat() {
   const appRef = useRef(null)
   const silenceTimeoutRef = useRef(null)
   const isSpeakingRef = useRef(false)
+  const isRecognitionActiveRef = useRef(false)
 
-  // Initialize speech recognition
+  // Modify the speech recognition initialization
   useEffect(() => {
-    if (typeof window !== 'undefined' && !recognitionRef.current) {
-      try {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-        if (SpeechRecognition) {
-          recognitionRef.current = new SpeechRecognition()
-          recognitionRef.current.continuous = true
-          recognitionRef.current.interimResults = true
+    const initializeSpeechRecognition = () => {
+      if (typeof window !== 'undefined' && !recognitionRef.current) {
+        try {
+          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+          if (SpeechRecognition) {
+            recognitionRef.current = new SpeechRecognition()
+            recognitionRef.current.continuous = true
+            recognitionRef.current.interimResults = true
 
-          recognitionRef.current.onresult = (event) => {
-            let finalTranscript = ''
-            let interimTranscript = ''
+            recognitionRef.current.onresult = (event) => {
+              let finalTranscript = ''
+              let interimTranscript = ''
 
-            // Reset silence timeout since we're receiving speech
-            if (silenceTimeoutRef.current) {
-              clearTimeout(silenceTimeoutRef.current)
+              if (silenceTimeoutRef.current) {
+                clearTimeout(silenceTimeoutRef.current)
+              }
+
+              for (let i = 0; i < event.results.length; i++) {
+                const result = event.results[i]
+                if (result.isFinal) {
+                  finalTranscript += result[0].transcript + ' '
+                  isSpeakingRef.current = false
+                } else {
+                  interimTranscript += result[0].transcript + ' '
+                  isSpeakingRef.current = true
+                }
+              }
+
+              fullTranscriptRef.current = finalTranscript + interimTranscript
+              setTranscript(fullTranscriptRef.current)
+
+              // Reset silence detection
+              if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current)
+              silenceTimeoutRef.current = setTimeout(() => {
+                if (!isSpeakingRef.current && isListening) {
+                  stopListening()
+                }
+              }, 2000)
             }
 
-            for (let i = 0; i < event.results.length; i++) {
-              const result = event.results[i]
-              if (result.isFinal) {
-                finalTranscript += result[0].transcript + ' '
-                isSpeakingRef.current = false
-              } else {
-                interimTranscript += result[0].transcript + ' '
-                isSpeakingRef.current = true
+            recognitionRef.current.onend = () => {
+              isRecognitionActiveRef.current = false
+              if (isListening) {
+                try {
+                  // Add small delay before restarting
+                  setTimeout(() => {
+                    if (isListening && !isRecognitionActiveRef.current) {
+                      recognitionRef.current.start()
+                      isRecognitionActiveRef.current = true
+                    }
+                  }, 200)
+                } catch (error) {
+                  console.error('Error restarting recognition:', error)
+                  setIsListening(false)
+                }
               }
             }
 
-            fullTranscriptRef.current = finalTranscript + interimTranscript
-            setTranscript(fullTranscriptRef.current)
-
-            // Set a new silence timeout
-            silenceTimeoutRef.current = setTimeout(() => {
-              if (!isSpeakingRef.current && isListening) {
-                stopListening()
-              }
-            }, 10000) // 2 seconds of silence will trigger stop
-          }
-
-          recognitionRef.current.onend = () => {
-            if (isListening) {
-              try {
-                recognitionRef.current.start()
-              } catch (error) {
-                console.error('Error restarting recognition:', error)
+            recognitionRef.current.onerror = (event) => {
+              console.error('Speech recognition error:', event.error)
+              if (event.error === 'not-allowed') {
                 setIsListening(false)
+              } else if (event.error !== 'no-speech') {
+                // Attempt to restart on other errors
+                setTimeout(() => {
+                  if (isListening && !isRecognitionActiveRef.current) {
+                    try {
+                      recognitionRef.current.start()
+                      isRecognitionActiveRef.current = true
+                    } catch (error) {
+                      console.error('Error restarting after error:', error)
+                      setIsListening(false)
+                    }
+                  }
+                }, 1000)
               }
             }
           }
-
-          recognitionRef.current.onerror = (event) => {
-            console.error('Speech recognition error:', event.error)
-            if (event.error !== 'no-speech') {
-              setIsListening(false)
-            }
-          }
-
-          // Add speech start/end detection
-          recognitionRef.current.onspeechstart = () => {
-            isSpeakingRef.current = true
-            if (silenceTimeoutRef.current) {
-              clearTimeout(silenceTimeoutRef.current)
-            }
-          }
-
-          recognitionRef.current.onspeechend = () => {
-            isSpeakingRef.current = false
-            // Set timeout to stop if no new speech is detected
-            silenceTimeoutRef.current = setTimeout(() => {
-              if (!isSpeakingRef.current && isListening) {
-                stopListening()
-              }
-            }, 2000)
-          }
-
-        } else {
-          console.error('Speech recognition not supported in this browser')
+        } catch (error) {
+          console.error('Error initializing speech recognition:', error)
         }
-      } catch (error) {
-        console.error('Error initializing speech recognition:', error)
       }
     }
+
+    initializeSpeechRecognition()
 
     return () => {
       if (silenceTimeoutRef.current) {
@@ -108,41 +112,62 @@ export default function VoiceChat() {
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop()
+          isRecognitionActiveRef.current = false
         } catch (error) {
           console.error('Error stopping recognition:', error)
         }
       }
     }
-  }, [isListening])
+  }, [])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const startListening = () => {
+  // Modify startListening function
+  const startListening = async () => {
     try {
       setTranscript('')
       fullTranscriptRef.current = ''
       isSpeakingRef.current = false
+      
       if (silenceTimeoutRef.current) {
         clearTimeout(silenceTimeoutRef.current)
       }
+
+      // Ensure recognition is properly initialized
+      if (!recognitionRef.current) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+        recognitionRef.current = new SpeechRecognition()
+        // Re-initialize all event handlers
+        // ... (copy the event handler setup from the useEffect)
+      }
+
       setIsListening(true)
-      recognitionRef.current?.start()
+      if (!isRecognitionActiveRef.current) {
+        await recognitionRef.current.start()
+        isRecognitionActiveRef.current = true
+      }
     } catch (error) {
       console.error('Error starting recognition:', error)
       setIsListening(false)
+      isRecognitionActiveRef.current = false
     }
   }
 
+  // Modify stopListening function
   const stopListening = async () => {
     try {
       if (silenceTimeoutRef.current) {
         clearTimeout(silenceTimeoutRef.current)
       }
       setIsListening(false)
-      recognitionRef.current?.stop()
       
+      if (recognitionRef.current && isRecognitionActiveRef.current) {
+        recognitionRef.current.stop()
+        isRecognitionActiveRef.current = false
+      }
+
       if (fullTranscriptRef.current.trim()) {
         setIsLoading(true)
         setMessages(prev => [...prev, { type: 'user', text: fullTranscriptRef.current }])
@@ -173,6 +198,7 @@ export default function VoiceChat() {
     } catch (error) {
       console.error('Error stopping recognition:', error)
       setIsListening(false)
+      isRecognitionActiveRef.current = false
     }
   }
 
