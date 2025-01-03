@@ -16,6 +16,32 @@ export default function VoiceChat() {
   const silenceTimeoutRef = useRef(null)
   const isSpeakingRef = useRef(false)
   const isRecognitionActiveRef = useRef(false)
+  const wakeLockRef = useRef(null)
+  const retryTimeoutRef = useRef(null)
+  const maxRetryAttemptsRef = useRef(3)
+  const currentRetryAttemptRef = useRef(0)
+
+  // Add wake lock functionality
+  const requestWakeLock = async () => {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLockRef.current = await navigator.wakeLock.request('screen');
+      }
+    } catch (err) {
+      console.error('Wake Lock error:', err);
+    }
+  };
+
+  const releaseWakeLock = async () => {
+    if (wakeLockRef.current) {
+      try {
+        await wakeLockRef.current.release();
+        wakeLockRef.current = null;
+      } catch (err) {
+        console.error('Wake Lock release error:', err);
+      }
+    }
+  };
 
   // Modify the speech recognition initialization
   useEffect(() => {
@@ -127,46 +153,134 @@ export default function VoiceChat() {
   // Modify startListening function
   const startListening = async () => {
     try {
-      setTranscript('')
-      fullTranscriptRef.current = ''
-      isSpeakingRef.current = false
+      await requestWakeLock(); // Request wake lock when starting
+      setTranscript('');
+      fullTranscriptRef.current = '';
+      isSpeakingRef.current = false;
+      currentRetryAttemptRef.current = 0;
       
       if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current)
+        clearTimeout(silenceTimeoutRef.current);
       }
 
-      // Ensure recognition is properly initialized
-      if (!recognitionRef.current) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-        recognitionRef.current = new SpeechRecognition()
-        // Re-initialize all event handlers
-        // ... (copy the event handler setup from the useEffect)
+      // Reset and reinitialize recognition for mobile
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.log('Error stopping existing recognition:', e);
+        }
       }
 
-      setIsListening(true)
-      if (!isRecognitionActiveRef.current) {
-        await recognitionRef.current.start()
-        isRecognitionActiveRef.current = true
-      }
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+
+      // Mobile-specific settings
+      recognitionRef.current.maxAlternatives = 1;
+      recognitionRef.current.lang = 'en-US'; // Set language explicitly
+
+      // Set up event handlers
+      setupRecognitionHandlers();
+
+      setIsListening(true);
+      await recognitionRef.current.start();
+      isRecognitionActiveRef.current = true;
+
     } catch (error) {
-      console.error('Error starting recognition:', error)
-      setIsListening(false)
-      isRecognitionActiveRef.current = false
+      console.error('Error starting recognition:', error);
+      setIsListening(false);
+      isRecognitionActiveRef.current = false;
+      await releaseWakeLock();
     }
-  }
+  };
+
+  // Add new function to setup recognition handlers
+  const setupRecognitionHandlers = () => {
+    recognitionRef.current.onresult = (event) => {
+      let finalTranscript = '';
+      let interimTranscript = '';
+
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+      }
+
+      for (let i = 0; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript + ' ';
+          isSpeakingRef.current = false;
+          currentRetryAttemptRef.current = 0; // Reset retry counter on successful recognition
+        } else {
+          interimTranscript += result[0].transcript + ' ';
+          isSpeakingRef.current = true;
+        }
+      }
+
+      fullTranscriptRef.current = finalTranscript + interimTranscript;
+      setTranscript(fullTranscriptRef.current);
+
+      // Reset silence detection with longer timeout for mobile
+      if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
+      silenceTimeoutRef.current = setTimeout(() => {
+        if (!isSpeakingRef.current && isListening) {
+          stopListening();
+        }
+      }, 3000); // Increased timeout for mobile
+    };
+
+    recognitionRef.current.onend = async () => {
+      isRecognitionActiveRef.current = false;
+      if (isListening && currentRetryAttemptRef.current < maxRetryAttemptsRef.current) {
+        currentRetryAttemptRef.current++;
+        // Add exponential backoff for retries
+        const backoffTime = Math.min(1000 * Math.pow(2, currentRetryAttemptRef.current - 1), 5000);
+        
+        retryTimeoutRef.current = setTimeout(async () => {
+          try {
+            if (isListening && !isRecognitionActiveRef.current) {
+              await recognitionRef.current.start();
+              isRecognitionActiveRef.current = true;
+            }
+          } catch (error) {
+            console.error('Error restarting recognition:', error);
+            setIsListening(false);
+            await releaseWakeLock();
+          }
+        }, backoffTime);
+      } else {
+        setIsListening(false);
+        await releaseWakeLock();
+      }
+    };
+
+    recognitionRef.current.onerror = async (event) => {
+      console.error('Speech recognition error:', event.error);
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        setIsListening(false);
+        await releaseWakeLock();
+      }
+    };
+  };
 
   // Modify stopListening function
   const stopListening = async () => {
     try {
       if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current)
+        clearTimeout(silenceTimeoutRef.current);
       }
-      setIsListening(false)
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+      setIsListening(false);
       
       if (recognitionRef.current && isRecognitionActiveRef.current) {
-        recognitionRef.current.stop()
-        isRecognitionActiveRef.current = false
+        recognitionRef.current.stop();
+        isRecognitionActiveRef.current = false;
       }
+
+      await releaseWakeLock();
 
       if (fullTranscriptRef.current.trim()) {
         setIsLoading(true)
@@ -196,11 +310,12 @@ export default function VoiceChat() {
         }
       }
     } catch (error) {
-      console.error('Error stopping recognition:', error)
-      setIsListening(false)
-      isRecognitionActiveRef.current = false
+      console.error('Error stopping recognition:', error);
+      setIsListening(false);
+      isRecognitionActiveRef.current = false;
+      await releaseWakeLock();
     }
-  }
+  };
 
   // Function to format code blocks
   const formatCodeBlock = (text) => {
@@ -224,6 +339,19 @@ export default function VoiceChat() {
       }
     );
   };
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+      }
+      releaseWakeLock();
+    };
+  }, []);
 
   return (
     <div 
