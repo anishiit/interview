@@ -153,17 +153,13 @@ export default function VoiceChat() {
   // Modify startListening function
   const startListening = async () => {
     try {
-      await requestWakeLock(); // Request wake lock when starting
+      await requestWakeLock();
       setTranscript('');
       fullTranscriptRef.current = '';
       isSpeakingRef.current = false;
       currentRetryAttemptRef.current = 0;
       
-      if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current);
-      }
-
-      // Reset and reinitialize recognition for mobile
+      // Reset and reinitialize recognition for each session on mobile
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
@@ -172,14 +168,15 @@ export default function VoiceChat() {
         }
       }
 
+      // Create new instance for each session
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
+      
+      // Mobile-optimized settings
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
-
-      // Mobile-specific settings
       recognitionRef.current.maxAlternatives = 1;
-      recognitionRef.current.lang = 'en-US'; // Set language explicitly
+      recognitionRef.current.lang = 'en-US';
 
       // Set up event handlers
       setupRecognitionHandlers();
@@ -221,7 +218,7 @@ export default function VoiceChat() {
       fullTranscriptRef.current = finalTranscript + interimTranscript;
       setTranscript(fullTranscriptRef.current);
 
-      // Reset silence detection with longer timeout for mobile
+      // Longer silence timeout for mobile
       if (silenceTimeoutRef.current) clearTimeout(silenceTimeoutRef.current);
       silenceTimeoutRef.current = setTimeout(() => {
         if (!isSpeakingRef.current && isListening) {
