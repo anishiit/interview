@@ -1,10 +1,13 @@
 'use client'
-import { useState, useEffect, useRef, memo, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Mic, MicOff, Loader2 } from 'lucide-react'
 import CopyButton from './CopyButton'
-import { debounce } from 'lodash'
 
 export default function VoiceChat() {
+  const checkBrowserSupport = () => {
+    return typeof window !== 'undefined' && !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  };
+
   const [isListening, setIsListening] = useState(false)
   const [transcript, setTranscript] = useState('')
   const [messages, setMessages] = useState([])
@@ -46,6 +49,14 @@ export default function VoiceChat() {
 
   // Modify the speech recognition initialization
   useEffect(() => {
+    if (!checkBrowserSupport()) {
+      setMessages([{
+        type: 'error',
+        text: 'Speech recognition is not supported in your browser. Please try Chrome, Edge, or Safari.'
+      }]);
+      return;
+    }
+    
     const initializeSpeechRecognition = () => {
       if (typeof window !== 'undefined' && !recognitionRef.current) {
         try {
@@ -349,50 +360,6 @@ export default function VoiceChat() {
       }
       releaseWakeLock();
     };
-  }, []);
-
-  // Optimize message rendering with virtualization
-  const MessageList = memo(({ messages }) => {
-    return (
-      <div className="message-container">
-        {messages.map((message, index) => (
-          <Message key={index} message={message} />
-        ))}
-      </div>
-    );
-  });
-
-  // Optimize individual message rendering
-  const Message = memo(({ message }) => {
-    return (
-      <div className={`message ${message.type}`}>
-        <div 
-          className="message-content"
-          dangerouslySetInnerHTML={{ 
-            __html: message.type === 'ai' 
-              ? formatCodeBlock(message.text)
-              : message.text
-          }}
-        />
-      </div>
-    );
-  });
-
-  // Add debounced transcript updates
-  const debouncedSetTranscript = useCallback(
-    debounce((value) => setTranscript(value), 100),
-    []
-  );
-
-  // Add loading states
-  const [isInitializing, setIsInitializing] = useState(true);
-
-  useEffect(() => {
-    const init = async () => {
-      await initializeSpeechRecognition();
-      setIsInitializing(false);
-    };
-    init();
   }, []);
 
   return (
