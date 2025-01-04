@@ -39,7 +39,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen p-4 bg-gradient-to-b from-blue-100 to-white hidden-from-capture">
+    <main className="min-h-screen p-4 bg-blue-950 hidden-from-capture">
       <div className="max-w-4xl mx-auto">
         <VoiceChat />
       </div>

@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --background: #f0f4f8;
-  --foreground: #2d3748;
-  --chat-bg: #ffffff;
-  --message-user: #e8f4ff;
-  --message-ai: #f7f9fc;
-  --accent: #4a6fa5;
+  --background: #1a1f2c;
+  --foreground: #e2e8f0;
+  --chat-bg: #0d1b2a;
+  --message-user: #1e3a8a;
+  --message-ai: #162436;
+  --accent: #64b5f6;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -69,7 +69,7 @@ body {
 
 /* Inline code styling */
 code {
-  @apply bg-gray-100 rounded px-1 text-sm font-mono;
+  @apply bg-[#1e293b] text-[#e2e8f0] rounded px-1 text-sm font-mono;
   font-size: 0.75rem;
 }
 
@@ -95,7 +95,7 @@ p {
 /* Responsive chat container */
 .chat-container {
   @apply p-3 sm:p-4;
-  background: linear-gradient(145deg, #e6eef3, #f0f4f8);
+  background: linear-gradient(145deg, #1a1f2c, #0d1b2a);
   height: 100vh;
   width: 100vw;
   position: fixed;
@@ -137,8 +137,8 @@ p {
 
 .message {
   @apply p-3 rounded-lg text-base;
-  border: 1px solid rgba(148, 163, 184, 0.1);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   font-size: 0.875rem;
   margin-bottom: 0.25rem;
   max-width: 85%;
@@ -153,12 +153,12 @@ p {
 
 .message.user {
   background: var(--message-user);
-  color: #2c5282;
+  color: #ffffff;
 }
 
 .message.ai {
   background: var(--message-ai);
-  color: #2d3748;
+  color: #f3f4f6;
 }
 
 .message-content {
@@ -348,5 +348,97 @@ p {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded-full;
+  @apply bg-gray-600 rounded-full;
+}
+
+/* Add these styles to your globals.css */
+body {
+  background-color: #121212;
+  color: #d1d5db;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.code-block {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+.code-header {
+  background-color: #334155;
+  padding: 0.5rem 1rem;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+}
+
+.language-tag {
+  color: #f8fafc;
+  font-size: 0.875rem;
+}
+
+pre {
+  padding: 1rem;
+  margin: 0;
+  overflow-x: auto;
+}
+
+code {
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #f1f5f9;
+}
+
+/* Update input and button colors */
+input, textarea {
+  @apply bg-[#1e293b] text-[#f8fafc] placeholder-[#cbd5e1];
+}
+
+button {
+  @apply text-[#f8fafc];
+}
+
+/* Update link colors */
+a {
+  color: var(--accent);
+  @apply hover:text-[#bfdbfe];
+}
+
+/* Code block text colors with increased specificity */
+.code-block pre,
+.code-block code {
+  @apply text-white; /* Force white text */
+  color: #9d9d9d !important;
+}
+
+.code-block .language-tag {
+  @apply text-white; /* Force white text */
+  color: #a6a5a5 !important;
+}
+
+/* Message content text colors */
+.message-content {
+  @apply text-white; /* Force white text */
+  color: #9c9c9c !important;
+}
+
+.message-content code {
+  @apply text-white; /* Force white text */
+  color: #a7a3a3 !important;
+}
+
+/* Input and textarea text colors */
+input, 
+textarea {
+  @apply text-white placeholder-gray-300;
+  color: #888686 !important;
+}
+
+/* Button text color */
+button {
+  @apply text-white;
+  color: #aeaaaa !important;
 }

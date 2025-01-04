@@ -403,9 +403,9 @@ export default function VoiceChat() {
       }}
     >
       <div className="chat-content">
-        <div className="flex flex-col h-full bg-white rounded-lg shadow-lg">
+        <div className="flex flex-col h-full bg-[#0d1b2a] rounded-lg shadow-lg">
           {isScreenSharing && (
-            <div className="bg-yellow-100 text-yellow-800 px-2 py-1 text-xs rounded-t-lg">
+            <div className="bg-[#1e2a3a] text-[#d1d5db] px-2 py-1 text-xs rounded-t-lg">
               Screen sharing active - Only visible to you
             </div>
           )}
@@ -416,16 +416,16 @@ export default function VoiceChat() {
                 key={index}
                 className={`message group ${
                   message.type === 'user' 
-                    ? 'bg-blue-100 ml-auto text-blue-900' 
+                    ? 'bg-[#1e2a3a] ml-auto text-[#ffffff]' 
                     : message.type === 'error'
-                    ? 'bg-red-100 mr-auto text-red-900'
-                    : 'bg-gray-100 mr-auto text-gray-900'
+                    ? 'bg-[#2d1f1f] mr-auto text-[#ffa6a6]'
+                    : 'bg-[#162436] mr-auto text-[#ffffff]'
                 }`}
               >
                 <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <CopyButton text={
                     message.type === 'ai' 
-                      ? message.text.replace(/```[\s\S]*?```/g, '') // Remove code blocks
+                      ? message.text.replace(/```[\s\S]*?```/g, '')
                       : message.text
                   } />
                 </div>
@@ -442,10 +442,10 @@ export default function VoiceChat() {
             <div ref={messagesEndRef} />
           </div>
           
-          <div className="border-t p-2 bg-white">
-            {/* <div className="bg-gray-100 p-2 rounded-lg min-h-[40px] text-sm text-gray-700">
+          <div className="border-t border-[#1e2a3a] p-2 bg-[#0d1b2a]">
+            <div className="bg-[#162436] p-2 rounded-lg min-h-[40px] text-sm text-[#72757a]">
               {transcript || 'Start speaking or type your question...'}
-            </div> */}
+            </div>
             
             <form onSubmit={handleTextSubmit} className="mt-2 flex gap-2">
               <input
@@ -453,13 +453,19 @@ export default function VoiceChat() {
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
                 placeholder="Type your question here..."
-                className="flex-1 text-black px-3 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-1.5 border border-[#1e2a3a] rounded-lg text-sm 
+                         bg-[#162436] text-[#d1d5db] placeholder-[#6b7280]
+                         focus:outline-none focus:ring-2 focus:ring-[#272829]
+                         disabled:opacity-50"
                 disabled={isListening || isLoading}
               />
               <button
                 type="submit"
                 disabled={isLoading || isListening || !textInput.trim()}
-                className="px-4 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-1.5 bg-[#3c4b56] hover:bg-[#3d4b55] text-[#0d1b2a] 
+                         rounded-lg text-sm font-medium 
+                         disabled:opacity-50 disabled:cursor-not-allowed
+                         transition-colors duration-200"
               >
                 Send
               </button>
@@ -469,10 +475,11 @@ export default function VoiceChat() {
               <button
                 onClick={isListening ? stopListening : startListening}
                 disabled={isLoading}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium flex items-center ${
+                className={`px-4 py-1.5 rounded-full text-sm font-medium flex items-center
+                          transition-colors duration-200 ${
                   isListening 
-                    ? 'bg-red-500 hover:bg-red-600 text-white' 
-                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                    ? 'bg-[#6d5a5a] hover:bg-[#432121] text-[#d1d5db]' 
+                    : 'bg-[#36444f] hover:bg-[#203e56] text-[#0d1b2a]'
                 } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {isLoading ? (
