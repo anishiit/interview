@@ -25,6 +25,9 @@ export default function VoiceChat() {
   const maxRetryAttemptsRef = useRef(3)
   const currentRetryAttemptRef = useRef(0)
   const [textInput, setTextInput] = useState('')
+  const audioContextRef = useRef(null)
+  const audioStreamRef = useRef(null)
+  const mediaRecorderRef = useRef(null)
 
   // Add wake lock functionality
   const requestWakeLock = async () => {
@@ -393,6 +396,98 @@ export default function VoiceChat() {
       setTextInput('')
     }
   }
+
+  const processAudioChunk = async (blob) => {
+    try {
+      // Convert blob to base64 with proper formatting
+      const reader = new FileReader();
+      return new Promise((resolve, reject) => {
+        reader.onloadend = async () => {
+          try {
+            const base64Audio = reader.result;
+            
+            const response = await fetch('/api/transcribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ audio: base64Audio })
+            });
+            
+            if (!response.ok) {
+              const error = await response.json();
+              throw new Error(error.error || 'Transcription failed');
+            }
+            
+            const { transcript } = await response.json();
+            if (transcript && transcript.trim()) {
+              setTranscript(prev => {
+                const newTranscript = prev + ' ' + transcript.trim();
+                console.log('New transcript:', newTranscript); // Debug log
+                return newTranscript;
+              });
+            }
+          } catch (error) {
+            console.error('Error processing audio:', error);
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error processing audio chunk:', error);
+    }
+  };
+
+  const startSystemAudioCapture = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          mandatory: {
+            chromeMediaSource: 'tab'
+          }
+        },
+        video: false
+      });
+
+      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)({
+        sampleRate: 16000 // Optimize for speech recognition
+      });
+      
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      const destination = audioContextRef.current.createMediaStreamDestination();
+      source.connect(destination);
+      audioStreamRef.current = destination.stream;
+
+      // Configure MediaRecorder with optimal settings for Whisper
+      mediaRecorderRef.current = new MediaRecorder(audioStreamRef.current, {
+        mimeType: 'audio/webm;codecs=opus',
+        audioBitsPerSecond: 16000
+      });
+
+      let audioChunks = [];
+      const CHUNK_SIZE = 4; // Number of chunks to collect before processing
+
+      mediaRecorderRef.current.ondataavailable = async (event) => {
+        if (event.data.size > 0) {
+          audioChunks.push(event.data);
+          
+          // Process when we have enough chunks
+          if (audioChunks.length >= CHUNK_SIZE) {
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            await processAudioChunk(blob);
+            audioChunks = []; // Reset chunks
+          }
+        }
+      };
+
+      // Start recording in smaller chunks
+      mediaRecorderRef.current.start(500); // Capture every 500ms
+      setIsSystemAudioEnabled(true);
+
+    } catch (error) {
+      console.error('Error capturing system audio:', error);
+      alert('System audio capture requires Chrome with "System Audio Capture" enabled in chrome://flags');
+    }
+  };
 
   return (
     <div 
