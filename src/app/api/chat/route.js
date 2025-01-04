@@ -3,6 +3,91 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Initialize Google AI with your API key
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 
+// Add caching for the model
+let cachedModel = null;
+async function getCachedModel() {
+  if (!cachedModel) {
+    cachedModel = genAI.getGenerativeModel({ model: "gemini-pro" });
+  }
+  return cachedModel;
+}
+
+// Add context management
+let conversationHistory = [];
+async function getConversationContext(message) {
+  // Add the new message to history
+  conversationHistory.push(message);
+  
+  // Keep only last 5 messages for context
+  if (conversationHistory.length > 5) {
+    conversationHistory = conversationHistory.slice(-5);
+  }
+  
+  // Return formatted context
+  return conversationHistory.join('\n');
+}
+// Add candidate profile data
+const candidateProfile = {
+  name: "Anish Kumar Singh",
+  currentRole: "Pre-Final Year Engineering Student and Full Stack Developer",
+  experience: "Multiple projects, internships, and hackathon achievements",
+  resume: `
+    EDUCATION
+    - B.Tech in Environmental Engineering, Indian Institute of Technology (ISM), Dhanbad (GPA: 7.17 / 10.00)
+    - Relevant Coursework: Data Structures and Algorithms (C++), Engineering Economics, Probability & Statistics
+
+    EXPERIENCE
+    - Full Stack Developer Intern at Grull (Dec 2024 - Jan 2025)
+      * Built and optimized 2+ dynamic web applications using React, Next.js, JavaScript, and Node.js
+      * Achieved a 30% improvement in user engagement
+
+    PROJECTS
+    - LinkLum
+      * Scalable virtual campus platform using React, Next.js, Node.js, Express.js, and MongoDB
+      * Ensured data security for 500+ users and implemented features like alumni search, event creation, and profiles
+      * Achieved perfect scores (100%) in Performance, SEO, Accessibility, and Best Practices on Google Lighthouse
+
+    - Therawin
+      * Real-time chat platform with features like group chats and AI therapy chatbot using Next.js, Node.js, and Socket.io
+      * Integrated ZEGOCLOUD for video calls, improving communication efficiency by 35%
+      * Achieved 95% user satisfaction through intuitive design and seamless performance
+
+    SKILLS
+    - Programming Languages: C, C++, JavaScript, TypeScript, Go , Python
+    - Frontend: React.js, Next.js, HTML, CSS, Tailwind, Bootstrap, GSAP, Schadcn UI, Framer Motion
+    - Backend: Node.js, Express.js, MongoDB, Socket.io, API development, Authentication & Authorization
+    - Tools: GitHub, Docker, AWS, K6
+    - Concepts: Data Structures & Algorithms, Object-Oriented Programming, DOM Manipulation
+    - Soft Skills: Communication, Teamwork, Adaptability, Problem Solving
+
+    ACHIEVEMENTS
+    - 1st Rank: Smart India Internal Hackathon
+    - 2nd Rank: Hackathon Cosmolligence (Frontend Developer)
+    - 3rd Rank: Startup Idea Competition
+    - Led Team 22JE0116 to victory in a Full Stack Developer competition against 50+ teams
+    - Managed and grew three YouTube Channels with 53,000+ subscribers
+    - Solved 100+ LeetCode problems and made 2000+ contributions on GitHub
+  `,
+  githubProfile: `
+    - Repository: Alumni Portal (https://github.com/anishiit/aluminiportal)
+      * MERN stack application connecting alumni and students
+      * Live: https://aluminiportal.vercel.app/
+
+    - Repository: Therawin (https://github.com/anishiit/chat-frontend)
+      * Real-time chat platform supporting group chats and AI therapy chatbot
+      * Live: https://unrivaled-melba-047ef2.netlify.app/
+
+    - Repository: LinkLum (https://github.com/anishiit/linklum)
+      * Scalable virtual campus platform with microservices architecture
+      * Live: https://www.linklum.in/
+  `,
+  linkedinProfile: `
+    - Strong network of 500+ connections
+    - Active member of Entrepreneurship Cell at IIT ISM Dhanbad
+    - Regular participant in technical competitions and hackathons
+  `
+};
+
 // Function to format the response text
 function formatResponse(text) {
   // Format code blocks with syntax highlighting
@@ -33,15 +118,47 @@ function formatResponse(text) {
   return text;
 }
 
+// Add performance optimizations to the API
 export async function POST(req) {
   try {
     const { message } = await req.json();
 
-    // Initialize the model
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Initialize model with caching
+    const model = await getCachedModel();
 
-    // Add interview-style instructions to the prompt
+    // Add context management
+    const context = await getConversationContext(message);
+
+    // Enhanced prompt with better context
     const formattedPrompt = `
+    You are ${candidateProfile.name}, a passionate ${candidateProfile.currentRole}. 
+    Previous context: ${context}
+
+    Key aspects of your personality and background:
+    - You're a student at IIT ISM Dhanbad pursuing Environmental Engineering
+    - You're deeply passionate about full-stack development and have proven this through multiple successful projects
+    - You have entrepreneurial spirit, demonstrated through E-Cell involvement
+    - You're achievement-oriented, with multiple hackathon wins
+    - You balance technical expertise with leadership skills
+    - You're proud of your YouTube channel management experience
+
+    When answering:
+    1. Draw from your actual projects (LinkLum, Therawin, Alumni Portal)
+    2. Reference your specific tech stack (React, Next.js, Node.js, etc.)
+    3. Include real metrics and achievements when relevant
+    4. Maintain a confident but humble tone
+    5. Show enthusiasm for software development
+    6. Be honest about being a student while highlighting your practical experience
+    7. Use specific examples from your hackathon wins and internship
+
+    Remember to:
+    - Stay authentic to your background as an IIT student
+    - Reference your actual GitHub projects and their live deployments
+    - Mention specific technologies you've used in your projects
+    - Share real challenges and solutions from your experience
+    - Demonstrate both technical and soft skills
+    - Be proud of your achievements while staying humble
+
   Imagine you're in a professional interview setting, being interviewed by a voice assistant. Approach the conversation naturally and follow these guidelines:
 
   1. Start your response with a warm and friendly acknowledgment of the question.
@@ -127,12 +244,13 @@ export async function POST(req) {
     return new Response(JSON.stringify({ response: text }), {
       headers: { 'Content-Type': 'application/json' },
     });
+
   } catch (error) {
-    console.error('Error in chat API:', error);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    console.error('Error:', error);
+    return new Response(
+      JSON.stringify({ error: 'Internal Server Error' }),
+      { status: 500 }
+    );
   }
 }
 

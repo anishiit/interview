@@ -3,33 +3,44 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f0f4f8;
+  --foreground: #2d3748;
+  --chat-bg: #ffffff;
+  --message-user: #e8f4ff;
+  --message-ai: #f7f9fc;
+  --accent: #4a6fa5;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1a202c;
+    --foreground: #e2e8f0;
+    --chat-bg: #2d3748;
+    --message-user: #2a4365;
+    --message-ai: #2d3748;
+    --accent: #63b3ed;
   }
 }
 
 body {
-  color: black;
+  color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Add these styles for code blocks */
 .code-block {
-  @apply rounded-lg bg-gray-800 my-1;
+  @apply rounded-lg bg-gray-50 my-2;
+  border: 1px solid #e2e8f0;
   overflow: visible;
   width: 100%;
   height: auto;
 }
 
 .code-header {
-  @apply bg-gray-700 px-2 py-1 flex items-center justify-between text-xs sticky top-0 z-10;
+  @apply bg-gray-100 px-3 py-2;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .language-tag {
@@ -83,6 +94,8 @@ p {
 
 /* Responsive chat container */
 .chat-container {
+  @apply p-3 sm:p-4;
+  background: linear-gradient(145deg, #e6eef3, #f0f4f8);
   height: 100vh;
   width: 100vw;
   position: fixed;
@@ -90,7 +103,6 @@ p {
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 1rem;
   display: flex;
   justify-content: center;
   @apply transition-opacity duration-200;
@@ -102,6 +114,9 @@ p {
 
 /* Chat content wrapper */
 .chat-content {
+  @apply rounded-xl shadow-lg;
+  background: var(--chat-bg);
+  border: 1px solid rgba(148, 163, 184, 0.1);
   width: 100%;
   max-width: 1200px; /* Increased max-width for larger screens */
   height: 100%;
@@ -121,7 +136,9 @@ p {
 }
 
 .message {
-  @apply p-2 rounded-lg;
+  @apply p-3 rounded-lg text-base;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   font-size: 0.875rem;
   margin-bottom: 0.25rem;
   max-width: 85%;
@@ -132,6 +149,16 @@ p {
   -moz-user-select: text !important;
   -ms-user-select: text !important;
   user-select: text !important;
+}
+
+.message.user {
+  background: var(--message-user);
+  color: #2c5282;
+}
+
+.message.ai {
+  background: var(--message-ai);
+  color: #2d3748;
 }
 
 .message-content {
@@ -308,4 +335,18 @@ p {
 
 .history-timestamp {
   @apply text-sm text-gray-500 mb-2;
+}
+
+/* Improve scrollbar aesthetics */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
 }

@@ -1,7 +1,8 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, memo, useCallback } from 'react'
 import { Mic, MicOff, Loader2 } from 'lucide-react'
 import CopyButton from './CopyButton'
+import { debounce } from 'lodash'
 
 export default function VoiceChat() {
   const [isListening, setIsListening] = useState(false)
@@ -348,6 +349,50 @@ export default function VoiceChat() {
       }
       releaseWakeLock();
     };
+  }, []);
+
+  // Optimize message rendering with virtualization
+  const MessageList = memo(({ messages }) => {
+    return (
+      <div className="message-container">
+        {messages.map((message, index) => (
+          <Message key={index} message={message} />
+        ))}
+      </div>
+    );
+  });
+
+  // Optimize individual message rendering
+  const Message = memo(({ message }) => {
+    return (
+      <div className={`message ${message.type}`}>
+        <div 
+          className="message-content"
+          dangerouslySetInnerHTML={{ 
+            __html: message.type === 'ai' 
+              ? formatCodeBlock(message.text)
+              : message.text
+          }}
+        />
+      </div>
+    );
+  });
+
+  // Add debounced transcript updates
+  const debouncedSetTranscript = useCallback(
+    debounce((value) => setTranscript(value), 100),
+    []
+  );
+
+  // Add loading states
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  useEffect(() => {
+    const init = async () => {
+      await initializeSpeechRecognition();
+      setIsInitializing(false);
+    };
+    init();
   }, []);
 
   return (
