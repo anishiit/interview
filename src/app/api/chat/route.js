@@ -160,7 +160,7 @@ export async function POST(req) {
     - Sound genuine, as though you're having a thoughtful, meaningful discussion.
   
     Example opening phrases for responses:
-    - "Ah, that's a good question. Let me think... alright, here's how I see it."
+    - "That's a good question. Let me think... alright, here's how I see it."
     - "Sure, let me explain that step by step..."
     - "Hmm, that reminds me of a situation during my project work..."
   

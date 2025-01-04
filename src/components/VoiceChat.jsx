@@ -24,6 +24,7 @@ export default function VoiceChat() {
   const retryTimeoutRef = useRef(null)
   const maxRetryAttemptsRef = useRef(3)
   const currentRetryAttemptRef = useRef(0)
+  const [textInput, setTextInput] = useState('')
 
   // Add wake lock functionality
   const requestWakeLock = async () => {
@@ -362,6 +363,37 @@ export default function VoiceChat() {
     };
   }, []);
 
+  // Add this new function to handle text submissions
+  const handleTextSubmit = async (e) => {
+    e.preventDefault()
+    if (!textInput.trim()) return
+
+    setIsLoading(true)
+    setMessages(prev => [...prev, { type: 'user', text: textInput }])
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: textInput })
+      })
+      
+      if (!response.ok) throw new Error('Failed to get response')
+
+      const data = await response.json()
+      setMessages(prev => [...prev, { type: 'ai', text: data.response }])
+    } catch (error) {
+      console.error('Error getting response:', error)
+      setMessages(prev => [...prev, { 
+        type: 'error', 
+        text: 'Sorry, I encountered an error. Please try again.' 
+      }])
+    } finally {
+      setIsLoading(false)
+      setTextInput('')
+    }
+  }
+
   return (
     <div 
       ref={appRef}
@@ -411,9 +443,27 @@ export default function VoiceChat() {
           </div>
           
           <div className="border-t p-2 bg-white">
-            <div className="bg-gray-100 p-2 rounded-lg min-h-[40px] text-sm text-gray-700">
-              {transcript || 'Start speaking...'}
-            </div>
+            {/* <div className="bg-gray-100 p-2 rounded-lg min-h-[40px] text-sm text-gray-700">
+              {transcript || 'Start speaking or type your question...'}
+            </div> */}
+            
+            <form onSubmit={handleTextSubmit} className="mt-2 flex gap-2">
+              <input
+                type="text"
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder="Type your question here..."
+                className="flex-1 text-black px-3 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isListening || isLoading}
+              />
+              <button
+                type="submit"
+                disabled={isLoading || isListening || !textInput.trim()}
+                className="px-4 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Send
+              </button>
+            </form>
             
             <div className="flex justify-center mt-2 pb-1">
               <button
