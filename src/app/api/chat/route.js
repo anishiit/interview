@@ -7,7 +7,7 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 let cachedModel = null;
 async function getCachedModel() {
   if (!cachedModel) {
-    cachedModel = genAI.getGenerativeModel({ model: "gemini-pro" });
+    cachedModel = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
   }
   return cachedModel;
 }
